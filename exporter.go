@@ -3,13 +3,16 @@ package main
 import (
 	"github.com/prometheus/client_golang/prometheus"
 	"log"
-	"net/url"
+	"strings"
 )
 
 const namespace = "ironport"
 
 type Exporter struct {
-	statusURL string
+	statusURL      string
+	skipCertVerify bool
+	authUsername   string
+	authPassword   string
 
 	up      prometheus.Gauge
 	metrics map[string]prometheus.Gauge
@@ -28,15 +31,21 @@ func buildMetrics(names []string) map[string]prometheus.Gauge {
 	return m
 }
 
-func NewExporter(host, statusPath string) (*Exporter, error) {
-	statusURL := url.URL{
-		Scheme: "http",
-		Host:   host,
-		Path:   statusPath,
+func NewExporter(statusURL string, skipCertVerify bool, userPass string) (*Exporter, error) {
+	var authUsername, authPassword string
+
+	// Split userPass into user and password
+	pieces := strings.SplitN(userPass, ":", 2)
+	if len(pieces) == 2 {
+		authUsername = pieces[0]
+		authPassword = pieces[1]
 	}
 
 	return &Exporter{
-		statusURL: statusURL.String(),
+		statusURL:      statusURL,
+		skipCertVerify: skipCertVerify,
+		authUsername:   authUsername,
+		authPassword:   authPassword,
 
 		up: prometheus.NewGauge(prometheus.GaugeOpts{
 			Namespace: namespace,
@@ -103,7 +112,7 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 }
 
 func (e *Exporter) scrape() {
-	status, err := fetchStatus(e.statusURL)
+	status, err := fetchStatus(e.statusURL, e.skipCertVerify, e.authUsername, e.authPassword)
 	if err != nil {
 		log.Println("Error scraping IronPort status page: ", err)
 		e.up.Set(0)

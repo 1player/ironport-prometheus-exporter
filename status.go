@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -76,8 +77,21 @@ func parseStatus(r io.Reader) (*Status, error) {
 	return &status, nil
 }
 
-func fetchStatus(url string) (*Status, error) {
-	resp, err := http.Get(url)
+func fetchStatus(url string, skipCertVerify bool, user, pass string) (*Status, error) {
+	// Build client
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: *ironportSkipCertVerify},
+	}
+	client := &http.Client{Transport: tr}
+
+	// Build request
+	req, err := http.NewRequest("GET", url, http.NoBody)
+	if user != "" && pass != "" {
+		req.SetBasicAuth(user, pass)
+	}
+
+	// Fetch response
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
