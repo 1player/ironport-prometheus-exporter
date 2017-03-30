@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/xml"
 	"fmt"
+	"golang.org/x/net/html/charset"
 	"io"
 	"net/http"
 	"regexp"
@@ -70,6 +71,7 @@ func parseStatus(r io.Reader) (*Status, error) {
 	var status Status
 
 	decoder := xml.NewDecoder(r)
+	decoder.CharsetReader = charset.NewReaderLabel
 	err := decoder.Decode(&status)
 	if err != nil {
 		return nil, err

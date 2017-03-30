@@ -8,6 +8,8 @@ import (
 )
 
 const SampleStatus = `
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+
 <status build="phoebe 10.0.0-203" hostname="hostname" timestamp="20170329115551">
   <birth_time timestamp="20161011101643 (169d 1h 39m 8s)"/>
   <last_counter_reset timestamp=""/>
