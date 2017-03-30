@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"net/http"
 	"regexp"
 	"strconv"
 )
@@ -73,4 +74,14 @@ func parseStatus(r io.Reader) (*Status, error) {
 		return nil, err
 	}
 	return &status, nil
+}
+
+func fetchStatus(url string) (*Status, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	return parseStatus(resp.Body)
 }
